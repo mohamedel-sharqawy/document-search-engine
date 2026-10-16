@@ -19,7 +19,6 @@
 <p align="center">
   <img src="docs/images/search_engine_architecture_dark.gif" alt="Architecture diagram" width="100%">
 </p>
----
 
 ## Overview
 
