@@ -187,14 +187,31 @@ These addresses work on your own machine after you start the stack locally with 
 
 <!-- TODO: Prometheus and Grafana are not defined in docker-compose.yml yet. Add them (or remove their rows and the Monitoring section) so this table matches the repo. -->
 
-<!-- TODO: add docs/images/streamlit-search.png and docs/images/flink-ui.png -->
-<p align="center">
-  <img src="docs/images/search engine demo.png" alt="Streamlit search interface" width="85%">
-</p>
+### Screenshots
+
+#### Search interface (Streamlit)
 
 <p align="center">
-  <img src="docs/images/flink dashboard.png" alt="Flink Web UI showing the running job" width="85%">
+  <img src="docs/images/search%20engine%20demo.png" alt="Streamlit search interface" width="85%">
 </p>
+
+<p align="center"><em>The Streamlit search app: users type a query and browse the matching documents.</em></p>
+
+- Search box for entering keywords.
+- Results list showing the matching documents.
+- Document fields shown for each result (for example `title` and `original_text`).
+
+#### Flink Web UI
+
+<p align="center">
+  <img src="docs/images/flink%20dashboard.png" alt="Flink Web UI showing the running job" width="85%">
+</p>
+
+<p align="center"><em>The Flink dashboard showing <code>DocumentSearchJob</code> running on the cluster.</em></p>
+
+- Job status and runtime.
+- Records read from Kafka and written to Elasticsearch.
+- Available task slots on the TaskManager.
 
 ## Monitoring
 
