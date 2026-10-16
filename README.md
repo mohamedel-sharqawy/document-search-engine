@@ -189,11 +189,11 @@ These addresses work on your own machine after you start the stack locally with 
 
 <!-- TODO: add docs/images/streamlit-search.png and docs/images/flink-ui.png -->
 <p align="center">
-  <img src="docs/images/streamlit-search.png" alt="Streamlit search interface" width="85%">
+  <img src="docs/images/search engine demo.png" alt="Streamlit search interface" width="85%">
 </p>
 
 <p align="center">
-  <img src="docs/images/flink-ui.png" alt="Flink Web UI showing the running job" width="85%">
+  <img src="docs/images/flink dashboard.png" alt="Flink Web UI showing the running job" width="85%">
 </p>
 
 ## Monitoring
