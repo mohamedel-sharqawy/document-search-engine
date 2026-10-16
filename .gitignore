@@ -1,7 +1,17 @@
-﻿.venv/
+.venv/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 logs/
 .env
+.env.*
+!.env.example
 .DS_Store
+
+# Java / Maven build output
+target/
+*.class
+
+# IDE files
+.idea/
+.vscode/

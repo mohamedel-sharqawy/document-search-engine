@@ -2,7 +2,7 @@ import html
 import re
 import streamlit as st
 from pathlib import Path
-from search import load_documents, build_tfidf, search
+import requests
 import logging
 import time
 
@@ -74,24 +74,18 @@ def run_example(example_query):
 load_css()
 
 
-@st.cache_resource
-def initialize_search_engine():
-    df = load_documents()
-    vectorizer, document_vectors = build_tfidf(df)
-    return df, vectorizer, document_vectors
-
-
-df, vectorizer, document_vectors = initialize_search_engine()
+ELASTICSEARCH_URL = "http://localhost:9200"
+ELASTICSEARCH_INDEX = "documents"
 
 # Hero banner
 st.markdown(
     f'<div class="hero">'
     f'<div class="hero-eyebrow">CRANFIELD COLLECTION</div>'
     f'<div class="hero-title">🔎 Document Search Engine</div>'
-    f'<div class="hero-sub">Search scientific aerodynamics papers instantly using TF-IDF ranking.</div>'
-    f'<span class="chip">{len(df):,} documents</span>'
-    f'<span class="chip">TF-IDF</span>'
-    f'<span class="chip">Cosine similarity</span>'
+    f'<div class="hero-sub">Search scientific documents using Elasticsearch relevance ranking.</div>'
+    f'<span class="chip">Elasticsearch Index</span>'
+    f'<span class="chip">BM25 Relevance</span>'
+    f'<span class="chip">Kafka + Flink Pipeline</span>'
     f'</div>',
     unsafe_allow_html=True,
 )
@@ -124,8 +118,8 @@ for col, example in zip(example_cols, EXAMPLE_QUERIES):
 run_flag = st.session_state.pop("run_search", False)
 should_search = submitted or run_flag
 
+
 if not should_search:
-    # Empty state
     st.markdown(
         '<div class="empty-state">'
         '<div class="empty-icon">🔎</div>'
@@ -135,78 +129,89 @@ if not should_search:
         '</div>',
         unsafe_allow_html=True,
     )
-
 else:
     if not query.strip():
         logger.warning("Search rejected: empty query")
         st.warning("Please enter a search query.")
-
     else:
         start_time = time.perf_counter()
-
         try:
-            results = search(
-                query,
-                df,
-                vectorizer,
-                document_vectors,
-                top_k=top_k,
+            response = requests.post(
+                f"{ELASTICSEARCH_URL}/{ELASTICSEARCH_INDEX}/_search",
+                json={
+                    "size": top_k,
+                    "query": {
+                        "multi_match": {
+                            "query": query,
+                            "fields": ["title^2", "original_text"],
+                        }
+                    },
+                },
+                timeout=10,
             )
+            response.raise_for_status()
+            data = response.json()
 
-            useful_results = results[results["similarity"] > 0]
-
+            hits = data["hits"]["hits"]
             response_time = time.perf_counter() - start_time
 
             logger.info(
-                "Search completed | query=%r | results=%d | response_time_ms=%.2f",
+                "Elasticsearch search completed | query=%r | results=%d | response_time_ms=%.2f",
                 query,
-                len(useful_results),
+                len(hits),
                 response_time * 1000,
             )
 
-            if useful_results.empty:
-                logger.warning("No matches | query=%r", query)
+            if not hits:
                 st.info("No relevant documents were found for this query.")
-
             else:
-                best_match = float(useful_results["similarity"].max())
+                best_score = float(hits[0]["_score"])
 
-                # Stats row
                 st.markdown(
                     f'<div class="stat-grid">'
                     f'<div class="stat"><div class="stat-label">Results</div>'
-                    f'<div class="stat-value">{len(useful_results)}</div></div>'
+                    f'<div class="stat-value">{len(hits)}</div></div>'
                     f'<div class="stat"><div class="stat-label">Search time</div>'
                     f'<div class="stat-value">{response_time * 1000:.1f}<small>ms</small></div></div>'
-                    f'<div class="stat"><div class="stat-label">Best match</div>'
-                    f'<div class="stat-value">{best_match:.0%}</div></div>'
+                    f'<div class="stat"><div class="stat-label">Top relevance score</div>'
+                    f'<div class="stat-value">{best_score:.2f}</div></div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
 
-                for rank, (_, row) in enumerate(useful_results.iterrows(), start=1):
-                    sim = float(row["similarity"])
-                    width = min(sim * 100, 100)
+                for rank, hit in enumerate(hits, start=1):
+                    doc = hit["_source"]
+                    score = float(hit["_score"])
+                    width = (score / best_score * 100) if best_score > 0 else 0
+
+                    doc_id = doc.get("id", hit["_id"])
+                    title = doc.get("title", "Untitled document")
+                    original_text = doc.get("original_text", "")
 
                     with st.container(border=True):
                         st.markdown(
                             f'<div class="result-row">'
                             f'<div class="rank">{rank}</div>'
                             f'<div class="result-body">'
-                            f'<div class="result-title">{html.escape(str(row["title"]))}</div>'
+                            f'<div class="result-title">{html.escape(str(title))}</div>'
                             f'<div class="result-meta">'
-                            f'<span class="id-chip">ID {row["id"]}</span>'
+                            f'<span class="id-chip">ID {html.escape(str(doc_id))}</span>'
                             f'<div class="bar"><span style="width:{width:.0f}%"></span></div>'
-                            f'<span class="score">{sim:.1%} match</span>'
+                            f'<span class="score">Score: {score:.2f}</span>'
                             f'</div>'
-                            f'<div class="snippet">{build_snippet(row["original_text"], query)}</div>'
+                            f'<div class="snippet">{build_snippet(original_text, query)}</div>'
                             f'</div></div>',
                             unsafe_allow_html=True,
                         )
 
                         with st.expander("View full document"):
-                            st.write(row["original_text"])
+                            st.write(original_text)
 
+        except requests.exceptions.RequestException:
+            logger.exception("Elasticsearch request failed | query=%r", query)
+            st.error(
+                "Could not connect to Elasticsearch. Make sure Docker services are running."
+            )
         except Exception:
             logger.exception("Search failed | query=%r", query)
             st.error("Something went wrong during search. Check the application logs.")

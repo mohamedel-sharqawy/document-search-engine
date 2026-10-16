@@ -1,0 +1,7 @@
+
+FROM flink:1.20.3-scala_2.12-java17
+
+COPY connectors/flink-sql-connector-kafka-3.3.0-1.20.jar /opt/flink/lib/
+COPY connectors/flink-connector-elasticsearch8-3.1.0-1.20.jar /opt/flink/lib/
+COPY connectors/elasticsearch8-deps/*.jar /opt/flink/lib/
+COPY connectors/flink-metrics-prometheus-1.20.3.jar /opt/flink/lib/
