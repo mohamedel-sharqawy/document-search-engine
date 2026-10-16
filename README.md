@@ -20,7 +20,7 @@
 <<<<<<< HEAD
   <img src="docs/images/search_engine_architecture_dark" alt="Architecture diagram" width="100%">
 =======
-  <img src="docs/images/architecture.png" alt="Architecture diagram" width="100%">
+  <img src="docs/images/search_engine_architecture_dark" alt="Architecture diagram" width="100%">
 >>>>>>> c657065795ad21189f13f09625003ad6f6b73b09
 </p>
 
@@ -52,14 +52,14 @@ This project ingests documents as a stream, validates and cleans them in real ti
 
 ## Architecture
 
-| Layer | Component | Role |
-|---|---|---|
-| Ingestion | Python data preparation + Kafka producer | Prepares documents and publishes them to topic `documents` |
-| Messaging | Apache Kafka 3.9.1 | Broker; topic `documents`; bootstrap address `kafka:9092` inside the Docker network |
-| Stream processing | Apache Flink 1.20.3 (`DocumentSearchJob`) | Reads from Kafka, validates/cleans fields, writes to Elasticsearch |
-| Storage / search | Elasticsearch 8.17 | Index `documents`; stores processed documents and serves search |
-| Application | Python / Streamlit | Search and retrieval UI |
-| Monitoring | Prometheus + Grafana | Metrics scraping and dashboards |
+| Layer             | Component                                 | Role                                                                                |
+| ----------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| Ingestion         | Python data preparation + Kafka producer  | Prepares documents and publishes them to topic `documents`                          |
+| Messaging         | Apache Kafka 3.9.1                        | Broker; topic `documents`; bootstrap address `kafka:9092` inside the Docker network |
+| Stream processing | Apache Flink 1.20.3 (`DocumentSearchJob`) | Reads from Kafka, validates/cleans fields, writes to Elasticsearch                  |
+| Storage / search  | Elasticsearch 8.17                        | Index `documents`; stores processed documents and serves search                     |
+| Application       | Python / Streamlit                        | Search and retrieval UI                                                             |
+| Monitoring        | Prometheus + Grafana                      | Metrics scraping and dashboards                                                     |
 
 **Data flow:** `Documents → Python producer → Kafka → Flink → Elasticsearch → Streamlit`
 
@@ -69,17 +69,17 @@ This project ingests documents as a stream, validates and cleans them in real ti
 
 ## Tech Stack
 
-| Technology | Used for |
-|---|---|
-| Python 3.12 | Data preparation and exploration, Kafka producer, Streamlit app |
-| Pandas, NumPy, SciPy, scikit-learn, PyArrow | Data processing (see [`requirements.txt`](requirements.txt)) |
-| Apache Kafka 3.9.1 | Message broker for document streaming |
-| Apache Flink 1.20.3 (Java 17, Maven) | Stream processing job `DocumentSearchJob` |
-| Elasticsearch 8.17 | Document storage and search |
-| Streamlit | Search user interface |
-| Prometheus | Metrics collection |
-| Grafana | Monitoring dashboard |
-| Docker Compose | Running the infrastructure services |
+| Technology                                  | Used for                                                        |
+| ------------------------------------------- | --------------------------------------------------------------- |
+| Python 3.12                                 | Data preparation and exploration, Kafka producer, Streamlit app |
+| Pandas, NumPy, SciPy, scikit-learn, PyArrow | Data processing (see [`requirements.txt`](requirements.txt))    |
+| Apache Kafka 3.9.1                          | Message broker for document streaming                           |
+| Apache Flink 1.20.3 (Java 17, Maven)        | Stream processing job `DocumentSearchJob`                       |
+| Elasticsearch 8.17                          | Document storage and search                                     |
+| Streamlit                                   | Search user interface                                           |
+| Prometheus                                  | Metrics collection                                              |
+| Grafana                                     | Monitoring dashboard                                            |
+| Docker Compose                              | Running the infrastructure services                             |
 
 ## How It Works
 
@@ -179,17 +179,17 @@ docker compose down
 
 These addresses work on your own machine after you start the stack locally with Docker Compose.
 
-| Service | Address | Notes |
-|---|---|---|
-| Kafka (inside the Docker network) | `kafka:9092` | Bootstrap address used by Flink |
-| Kafka (from the host) | `localhost:29092` | Host listener, used by a producer running outside Docker |
-| Flink Web UI | `http://localhost:8081` | JobManager UI |
-| Flink JobManager metrics | `http://localhost:9249/metrics` | Prometheus endpoint |
-| Flink TaskManager metrics | `http://localhost:9250/metrics` | Mapped to port 9249 inside the container |
-| Elasticsearch | `http://localhost:9200` | Index `documents` |
-| Streamlit app | `http://localhost:8501` | Search UI |
-| Prometheus | `http://localhost:9090` | Scrape interval: 5 s |
-| Grafana | `http://localhost:3000` | Monitoring dashboard |
+| Service                           | Address                         | Notes                                                    |
+| --------------------------------- | ------------------------------- | -------------------------------------------------------- |
+| Kafka (inside the Docker network) | `kafka:9092`                    | Bootstrap address used by Flink                          |
+| Kafka (from the host)             | `localhost:29092`               | Host listener, used by a producer running outside Docker |
+| Flink Web UI                      | `http://localhost:8081`         | JobManager UI                                            |
+| Flink JobManager metrics          | `http://localhost:9249/metrics` | Prometheus endpoint                                      |
+| Flink TaskManager metrics         | `http://localhost:9250/metrics` | Mapped to port 9249 inside the container                 |
+| Elasticsearch                     | `http://localhost:9200`         | Index `documents`                                        |
+| Streamlit app                     | `http://localhost:8501`         | Search UI                                                |
+| Prometheus                        | `http://localhost:9090`         | Scrape interval: 5 s                                     |
+| Grafana                           | `http://localhost:3000`         | Monitoring dashboard                                     |
 
 <!-- TODO: Prometheus and Grafana are not defined in docker-compose.yml yet. Add them (or remove their rows and the Monitoring section) so this table matches the repo. -->
 
@@ -213,13 +213,13 @@ Monitoring is a separate layer and does not touch the document data pipeline.
 
 Metrics shown on the dashboard:
 
-| Metric | Source |
-|---|---|
-| Running Flink jobs | JobManager |
-| Registered TaskManagers | JobManager |
-| Available and total task slots | JobManager |
-| JVM heap memory usage | JobManager / TaskManager |
-| JVM CPU load | JobManager / TaskManager |
+| Metric                         | Source                   |
+| ------------------------------ | ------------------------ |
+| Running Flink jobs             | JobManager               |
+| Registered TaskManagers        | JobManager               |
+| Available and total task slots | JobManager               |
+| JVM heap memory usage          | JobManager / TaskManager |
+| JVM CPU load                   | JobManager / TaskManager |
 
 <!-- TODO: add docs/images/grafana-dashboard.png -->
 <p align="center">
@@ -228,16 +228,16 @@ Metrics shown on the dashboard:
 
 ## Configuration
 
-| Setting | Value | Where |
-|---|---|---|
-| Kafka topic | `documents` (3 partitions) | `docker-compose.yml`, producer, Flink job |
-| Kafka bootstrap address | `kafka:9092` (in-network) / `localhost:29092` (host) | `docker-compose.yml` |
-| Elasticsearch index | `documents` | Flink job |
-| Flink checkpoint interval | 5 seconds | `DocumentSearchJob` |
-| Flink parallelism | 1 (`parallelism.default`) | `docker-compose.yml` |
-| Task slots per TaskManager | 2 | `docker-compose.yml` |
-| Flink process memory | 1024 MB (JobManager and TaskManager) | `docker-compose.yml` |
-| Prometheus scrape interval | 5 seconds | Prometheus configuration |
+| Setting                    | Value                                                | Where                                     |
+| -------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| Kafka topic                | `documents` (3 partitions)                           | `docker-compose.yml`, producer, Flink job |
+| Kafka bootstrap address    | `kafka:9092` (in-network) / `localhost:29092` (host) | `docker-compose.yml`                      |
+| Elasticsearch index        | `documents`                                          | Flink job                                 |
+| Flink checkpoint interval  | 5 seconds                                            | `DocumentSearchJob`                       |
+| Flink parallelism          | 1 (`parallelism.default`)                            | `docker-compose.yml`                      |
+| Task slots per TaskManager | 2                                                    | `docker-compose.yml`                      |
+| Flink process memory       | 1024 MB (JobManager and TaskManager)                 | `docker-compose.yml`                      |
+| Prometheus scrape interval | 5 seconds                                            | Prometheus configuration                  |
 
 > The Flink checkpoint interval and the Prometheus scrape interval are two independent settings that both happen to be 5 seconds.
 
@@ -279,6 +279,7 @@ Metrics shown on the dashboard:
 ## License
 
 <!-- TODO: add a LICENSE file (for example MIT) and keep this line, or remove this section -->
+
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Author
