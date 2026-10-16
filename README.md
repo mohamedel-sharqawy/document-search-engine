@@ -17,7 +17,11 @@
 </div>
 
 <p align="center">
+<<<<<<< HEAD
   <img src="docs/images/search_engine_architecture_dark" alt="Architecture diagram" width="100%">
+=======
+  <img src="docs/images/architecture.png" alt="Architecture diagram" width="100%">
+>>>>>>> c657065795ad21189f13f09625003ad6f6b73b09
 </p>
 
 ---
