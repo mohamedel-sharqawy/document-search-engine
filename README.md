@@ -234,7 +234,7 @@ Metrics shown on the dashboard:
 
 <!-- TODO: add docs/images/grafana-dashboard.png -->
 <p align="center">
-  <img src="docs/images/grafana-dashboard.png" alt="Grafana monitoring dashboard" width="85%">
+  <img src="docs/images/Grafana Dashboard.png" alt="Grafana monitoring dashboard" width="85%">
 </p>
 
 ## Configuration
