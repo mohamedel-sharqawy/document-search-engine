@@ -185,8 +185,6 @@ These addresses work on your own machine after you start the stack locally with 
 | Prometheus                        | `http://localhost:9090`         | Scrape interval: 5 s                                     |
 | Grafana                           | `http://localhost:3000`         | Monitoring dashboard                                     |
 
-<!-- TODO: Prometheus and Grafana are not defined in docker-compose.yml yet. Add them (or remove their rows and the Monitoring section) so this table matches the repo. -->
-
 ### Screenshots
 
 #### Search interface (Streamlit)
@@ -232,9 +230,12 @@ Metrics shown on the dashboard:
 | JVM heap memory usage          | JobManager / TaskManager |
 | JVM CPU load                   | JobManager / TaskManager |
 
-<!-- TODO: add docs/images/grafana-dashboard.png -->
 <p align="center">
   <img src="docs/images/Grafana Dashboard.png" alt="Grafana monitoring dashboard" width="85%">
+</p>
+
+<p align="center">
+  <img src="docs/images/Prometheus.png" alt="Prometheus" width="85%">
 </p>
 
 ## Configuration
@@ -260,7 +261,7 @@ Metrics shown on the dashboard:
 .
 ├── connectors/            # Flink connector JARs (Kafka, Elasticsearch 8, Prometheus metrics)
 ├── data/                  # Dataset and processed data
-├── sql/                   # SQL scripts
+├── sql/                   # SQL queries for data exploration and quality check
 ├── src/                   # Python source (Streamlit app and related code)
 ├── Dockerfile             # Streamlit app image
 ├── Dockerfile.flink       # Custom Flink image with connectors
@@ -270,32 +271,38 @@ Metrics shown on the dashboard:
 └── docs/images/           # Architecture diagram and screenshots
 ```
 
-<!-- TODO: describe sql/ and the exact files in src/ and data/ -->
+## Data Exploration (SQL)
+
+The [`sql/`](sql/) folder contains queries used to explore and validate the document dataset (table `documents`) before streaming:
+
+| Query                      | Purpose                                                                      |
+| -------------------------- | ---------------------------------------------------------------------------- |
+| Total number of documents  | Size of the dataset                                                          |
+| Missing values             | Counts of `NULL` values in `id`, `title`, `original_text` and `cleaned_text` |
+| Document length statistics | Minimum, maximum and average length of `original_text`                       |
+| Longest documents          | Top 10 documents by text length                                              |
+
+These checks motivated the validation and cleaning rules applied later in the Flink job.
 
 ## Challenges & Lessons Learned
 
-<!-- TODO: write 3-5 real points from your experience. Examples of what fits here: Docker networking (kafka:9092 vs localhost:29092), connector versions compatible with Flink 1.20, exposing Flink metrics for Prometheus. -->
+- **Challenge:** Services inside Docker and tools running on the host could not use the same Kafka address.
+  **Solution:** Configured two Kafka listeners: `kafka:9092` for containers inside the Docker network (used by Flink) and `localhost:29092` for clients running on the host.
 
-- **Challenge:** _what was hard_ → **Solution:** _what you did_.
-- **Lesson:** _what you would do differently next time_.
+- **Challenge:** The Flink JobManager and TaskManager both expose Prometheus metrics on port `9249`, which conflicts when both are published to the host.
+  **Solution:** Kept `9249` for the JobManager and mapped the TaskManager's internal `9249` to host port `9250`, so each component has its own distinct metrics endpoint.
 
-## Future Improvements
+- **Challenge:** The official Flink image does not include the Kafka, Elasticsearch 8 and Prometheus connectors, and they must match the Flink version.
+  **Solution:** Built a custom image (`Dockerfile.flink`) based on Flink 1.20.3 that copies version-matched connector JARs into `/opt/flink/lib`.
 
-- Add filters, pagination and result highlighting to the search UI.
-- Tune search relevance (analyzers, field boosting) in Elasticsearch.
-- Add automated tests for the Flink job and the producer.
-- Add alerting rules on the monitored metrics.
-- Increase Flink parallelism and run load tests.
+- **Challenge:** Running Kafka, Flink and Elasticsearch together uses a lot of memory on a development machine.
+  **Solution:** Limited the JVM heap and process memory for each service (512 MB for Kafka and Elasticsearch, 1024 MB for Flink) and ran Elasticsearch as a single node.
 
-## License
+- **Lesson:** Keeping the data pipeline and the monitoring layer separate made it easier to debug: Flink metrics could be checked directly at the `/metrics` endpoints before connecting Prometheus and Grafana.
 
-<!-- TODO: add a LICENSE file (for example MIT) and keep this line, or remove this section -->
+## Who am I ?
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
-## Author
-
-**Mohamed**, Data Science student, Faculty of Artificial Intelligence, Menoufia University
+**Mohamed_Elsharqawy**, Data Science student, Faculty of Artificial Intelligence, Menoufia University
 
 - GitHub: [@mohamedel-sharqawy](https://github.com/mohamedel-sharqawy)
-- LinkedIn: <!-- TODO: add link -->
+- LinkedIn: https://www.linkedin.com/in/mohamed-el-sharqawy/
